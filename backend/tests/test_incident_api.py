@@ -36,6 +36,33 @@ def test_investigate_incident():
     assert data["resolved"] is True
 
 
+def test_get_persisted_investigation():
+    client.post("/incidents/INC-500/investigate")
+
+    response = client.get("/incidents/INC-500")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["incident_id"] == "INC-500"
+    assert "rca_report" in data
+    assert "postmortem" in data
+
+
+def test_list_investigations():
+    client.post("/incidents/INC-500/investigate")
+
+    response = client.get("/incidents")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["count"] >= 1
+    assert "INC-500" in data["incident_ids"]
+
+
 def test_approve_jira_after_investigation():
     client.post("/incidents/INC-500/investigate")
 
