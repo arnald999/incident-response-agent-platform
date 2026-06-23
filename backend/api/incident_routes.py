@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from backend.graph.workflow import incident_workflow
-from backend.schemas.api import InvestigationResponse, JiraApprovalResponse
+from backend.schemas.api import InvestigationRequest, InvestigationResponse, JiraApprovalResponse
 from backend.tools.mcp_client import MCPClient
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
@@ -14,8 +14,16 @@ LATEST_RESULTS = {}
     "/{incident_id}/investigate",
     response_model=InvestigationResponse,
 )
-async def investigate_incident(incident_id: str):
-    result = await incident_workflow.ainvoke({"incident_id": incident_id})
+async def investigate_incident(
+    incident_id: str,
+    request: InvestigationRequest | None = None,
+):
+    initial_state = {
+        "incident_id": incident_id,
+        "alert_details": request.alert_details if request else {},
+    }
+
+    result = await incident_workflow.ainvoke(initial_state)
     LATEST_RESULTS[incident_id] = result
     return result
 
@@ -47,4 +55,12 @@ async def approve_jira(incident_id: str):
         "incident_id": incident_id,
         "jira_ticket": ticket,
         "status": "approved",
+    }
+
+
+@router.get("")
+async def list_investigations():
+    return {
+        "count": len(LATEST_RESULTS),
+        "incident_ids": list(LATEST_RESULTS.keys()),
     }

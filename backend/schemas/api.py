@@ -6,6 +6,10 @@ from backend.schemas.research import ResearchFinding
 from backend.schemas.response import ActionPlan
 
 
+class InvestigationRequest(BaseModel):
+    alert_details: dict | None = None
+
+
 class InvestigationResponse(BaseModel):
     incident_id: str
     research_findings: ResearchFinding
