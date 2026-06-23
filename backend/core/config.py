@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     postgres_url: str = ""
     redis_url: str = ""
 
+    database_url: str = "sqlite+aiosqlite:///./incident_platform.db"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",

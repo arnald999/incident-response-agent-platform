@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException
 
 from backend.graph.workflow import incident_workflow
+from backend.repositories.investigation_repository import InvestigationRepository
 from backend.schemas.api import InvestigationRequest, InvestigationResponse, JiraApprovalResponse
 from backend.tools.mcp_client import MCPClient
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
-mcp = MCPClient()
 
-LATEST_RESULTS = {}
+mcp = MCPClient()
+repo = InvestigationRepository()
 
 
 @router.post(
@@ -24,8 +25,19 @@ async def investigate_incident(
     }
 
     result = await incident_workflow.ainvoke(initial_state)
-    LATEST_RESULTS[incident_id] = result
+    await repo.save(result)
+
     return result
+
+
+@router.get("")
+async def list_investigations():
+    records = await repo.list_all()
+
+    return {
+        "count": len(records),
+        "incident_ids": [record.incident_id for record in records],
+    }
 
 
 @router.post(
@@ -33,34 +45,39 @@ async def investigate_incident(
     response_model=JiraApprovalResponse,
 )
 async def approve_jira(incident_id: str):
-    result = LATEST_RESULTS.get(incident_id)
+    record = await repo.get_by_incident_id(incident_id)
 
-    if not result:
+    if not record:
         raise HTTPException(
             status_code=404,
             detail="No investigation found for this incident.",
         )
 
-    action_plan = result["action_plan"]
+    action_plan = record.action_plan
 
     ticket = await mcp.create_jira_ticket(
-        title=action_plan.proposed_jira_title or "Incident remediation",
-        description=action_plan.proposed_jira_description or "",
+        title=action_plan.get("proposed_jira_title") or "Incident remediation",
+        description=action_plan.get("proposed_jira_description") or "",
     )
 
-    action_plan.jira_ticket = ticket
-    action_plan.requires_approval = False
+    action_plan["jira_ticket"] = ticket
+    action_plan["requires_approval"] = False
+
+    record.action_plan = action_plan
+
+    await repo.save(
+        {
+            "incident_id": record.incident_id,
+            "resolved": record.resolved,
+            "research_findings": record.research_findings,
+            "rca_report": record.rca_report,
+            "action_plan": record.action_plan,
+            "postmortem": record.postmortem,
+        }
+    )
 
     return {
         "incident_id": incident_id,
         "jira_ticket": ticket,
         "status": "approved",
-    }
-
-
-@router.get("")
-async def list_investigations():
-    return {
-        "count": len(LATEST_RESULTS),
-        "incident_ids": list(LATEST_RESULTS.keys()),
     }
