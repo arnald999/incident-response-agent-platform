@@ -10,6 +10,11 @@ class InvestigationRequest(BaseModel):
     alert_details: dict | None = None
 
 
+class InvestigationListResponse(BaseModel):
+    count: int
+    incident_ids: list[str]
+
+
 class InvestigationResponse(BaseModel):
     incident_id: str
     research_findings: ResearchFinding

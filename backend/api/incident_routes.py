@@ -2,13 +2,32 @@ from fastapi import APIRouter, HTTPException
 
 from backend.graph.workflow import incident_workflow
 from backend.repositories.investigation_repository import InvestigationRepository
-from backend.schemas.api import InvestigationRequest, InvestigationResponse, JiraApprovalResponse
+from backend.schemas.api import (
+    InvestigationListResponse,
+    InvestigationRequest,
+    InvestigationResponse,
+    JiraApprovalResponse,
+)
 from backend.tools.mcp_client import MCPClient
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
 
 mcp = MCPClient()
 repo = InvestigationRepository()
+
+
+
+@router.get(
+    "",
+    response_model=InvestigationListResponse,
+)
+async def list_investigations():
+    records = await repo.list_all()
+
+    return {
+        "count": len(records),
+        "incident_ids": [record.incident_id for record in records],
+    }
 
 
 @router.post(
@@ -28,16 +47,6 @@ async def investigate_incident(
     await repo.save(result)
 
     return result
-
-
-@router.get("")
-async def list_investigations():
-    records = await repo.list_all()
-
-    return {
-        "count": len(records),
-        "incident_ids": [record.incident_id for record in records],
-    }
 
 
 @router.post(
@@ -80,4 +89,26 @@ async def approve_jira(incident_id: str):
         "incident_id": incident_id,
         "jira_ticket": ticket,
         "status": "approved",
+    }
+
+@router.get(
+    "/{incident_id}",
+    response_model=InvestigationResponse,
+)
+async def get_investigation(incident_id: str):
+    record = await repo.get_by_incident_id(incident_id)
+
+    if not record:
+        raise HTTPException(
+            status_code=404,
+            detail="Investigation not found.",
+        )
+
+    return {
+        "incident_id": record.incident_id,
+        "research_findings": record.research_findings,
+        "rca_report": record.rca_report,
+        "action_plan": record.action_plan,
+        "postmortem": record.postmortem,
+        "resolved": record.resolved,
     }
