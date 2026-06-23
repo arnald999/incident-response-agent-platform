@@ -1,7 +1,21 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: incident-response-postgres
+    environment:
+      POSTGRES_DB: incident_response
+      POSTGRES_USER: incident_user
+      POSTGRES_PASSWORD: incident_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build: .
     container_name: incident-response-backend
+    depends_on:
+      - postgres
     ports:
       - "8000:8000"
     environment:
@@ -10,4 +24,7 @@ services:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
       OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
       MODEL_NAME: openrouter/free
-      DATABASE_URL: sqlite+aiosqlite:///./incident_platform.db
+      DATABASE_URL: postgresql+asyncpg://incident_user:incident_password@postgres:5432/incident_response
+
+volumes:
+  postgres_data:
