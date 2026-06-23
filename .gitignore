@@ -40,3 +40,8 @@ build/
 
 # Logs
 *.log
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
