@@ -4,8 +4,12 @@ from backend.core.config import settings
 
 
 def get_llm():
+    if not settings.openrouter_api_key:
+        return None
+
     return ChatOpenAI(
-        model="gpt-4.1",
+        model=settings.model_name,
+        api_key=settings.openrouter_api_key,
+        base_url=settings.openrouter_base_url,
         temperature=0,
-        api_key=settings.openai_api_key,
     )
