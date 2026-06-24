@@ -15,6 +15,12 @@ def fallback_report(findings) -> RCAReport:
     )
 
 
+def normalize_confidence(value: float) -> float:
+    if value > 1:
+        return value / 100
+    return value
+
+
 async def analysis_agent(state: IncidentState):
     findings = state["research_findings"]
     llm = get_llm()
@@ -45,6 +51,8 @@ Log summary:
             )
         except Exception:
             report = fallback_report(findings)
+        
+    report.confidence = normalize_confidence(report.confidence)
 
     return {
         "rca_report": report,

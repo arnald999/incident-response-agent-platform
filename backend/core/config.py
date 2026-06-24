@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     langfuse_base_url: str = "https://cloud.langfuse.com"
     langfuse_tracing_environment: str = "incident-response-dev"
 
+    mcp_server_url: str = ""
+    use_real_mcp: bool = False
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",
