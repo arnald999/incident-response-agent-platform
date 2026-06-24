@@ -156,15 +156,50 @@ export function Dashboard() {
 
             <Divider sx={{ my: 2 }} />
 
-            {investigationsQuery.data?.incident_ids?.length ? (
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                {investigationsQuery.data.incident_ids.map((id: string) => (
-                  <Chip
-                    key={id}
-                    label={id}
-                    clickable
-                    onClick={() => getInvestigationMutation.mutate(id)}
-                  />
+            {investigationsQuery.data?.investigations?.length ? (
+              <Stack spacing={1}>
+                {investigationsQuery.data.investigations.map((item: any) => (
+                  <Card
+                    key={item.incident_id}
+                    variant="outlined"
+                    sx={{ cursor: "pointer" }}
+                    onClick={() =>
+                      getInvestigationMutation.mutate(item.incident_id)
+                    }
+                  >
+                    <CardContent>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Typography fontWeight="bold">
+                          {item.incident_id}
+                        </Typography>
+
+                        <Chip
+                          label={item.resolved ? "Resolved" : "Open"}
+                          color={item.resolved ? "success" : "warning"}
+                          size="small"
+                        />
+                      </Stack>
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                      >
+                        {item.root_cause}
+                      </Typography>
+
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                      >
+                        Confidence: {item.confidence}
+                      </Typography>
+                    </CardContent>
+                  </Card>
                 ))}
               </Stack>
             ) : (
