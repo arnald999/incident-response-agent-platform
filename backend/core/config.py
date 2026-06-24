@@ -14,6 +14,11 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite+aiosqlite:///./incident_platform.db"
 
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_base_url: str = "https://cloud.langfuse.com"
+    langfuse_tracing_environment: str = "incident-response-dev"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",

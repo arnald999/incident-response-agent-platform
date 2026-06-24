@@ -9,6 +9,7 @@ from backend.schemas.api import (
     JiraApprovalResponse,
 )
 from backend.tools.mcp_client import MCPClient
+from backend.observability.langfuse import get_langfuse_handler
 
 router = APIRouter(prefix="/incidents", tags=["Incidents"])
 
@@ -53,9 +54,26 @@ async def investigate_incident(
         "alert_details": request.alert_details if request else {},
     }
 
-    result = await incident_workflow.ainvoke(initial_state)
-    await repo.save(result)
+    handler = get_langfuse_handler()
+    callbacks = [handler] if handler else []
 
+    result = await incident_workflow.ainvoke(
+        initial_state,
+        config={
+            "callbacks": callbacks,
+            "metadata": {
+                "project": "incident-response-agent-platform",
+                "incident_id": incident_id,
+                "workflow": "incident_investigation",
+            },
+            "tags": [
+                "incident-response-agent-platform",
+                "langgraph",
+                "fde-roadmap",
+            ],
+            "run_name": f"incident-investigation-{incident_id}",
+        },
+    )
     return result
 
 
