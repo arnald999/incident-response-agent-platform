@@ -28,3 +28,8 @@ export async function approveJira(incidentId: string) {
 
   return response.data;
 }
+
+export async function getInvestigation(incidentId: string) {
+  const response = await axios.get(`${API_BASE_URL}/incidents/${incidentId}`);
+  return response.data;
+}

@@ -15,6 +15,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   approveJira,
+  getInvestigation,
   investigateIncident,
   listInvestigations,
 } from "../api/incidentApi";
@@ -42,6 +43,14 @@ export function Dashboard() {
     mutationFn: approveJira,
     onSuccess: (data) => {
       setJiraResult(data);
+    },
+  });
+
+  const getInvestigationMutation = useMutation({
+    mutationFn: getInvestigation,
+    onSuccess: (data) => {
+      setResult(data);
+      setJiraResult(null);
     },
   });
 
@@ -150,7 +159,12 @@ export function Dashboard() {
             {investigationsQuery.data?.incident_ids?.length ? (
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 {investigationsQuery.data.incident_ids.map((id: string) => (
-                  <Chip key={id} label={id} />
+                  <Chip
+                    key={id}
+                    label={id}
+                    clickable
+                    onClick={() => getInvestigationMutation.mutate(id)}
+                  />
                 ))}
               </Stack>
             ) : (
