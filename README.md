@@ -2,42 +2,45 @@
 
 ## Overview
 
-Incident Response Agent Platform is a multi-agent AI system designed to automate enterprise incident investigation and response workflows.
+Incident Response Agent Platform is a production-grade multi-agent AI system designed to automate enterprise incident investigation and response workflows.
 
-The platform leverages:
+The platform combines:
 
 * LangGraph
 * FastAPI
-* OpenRouter / OpenAI-compatible models
-* Multi-Agent Architecture
-* PostgreSQL
+* OpenRouter
+* MCP (Model Context Protocol)
+* Langfuse
+* React
+* PostgreSQL / SQLite
 * Docker
-* Enterprise Tool Integrations
 
 to create an intelligent operational assistant capable of:
 
 * Investigating incidents
 * Gathering operational context
-* Producing root-cause analyses
+* Correlating evidence
+* Producing Root Cause Analysis (RCA)
 * Recommending remediation actions
+* Supporting human approvals
 * Generating postmortems
 
 ---
 
-# Features
+## Features
 
-## Multi-Agent Workflow
+### Multi-Agent Workflow
 
-### Research Agent
+#### Research Agent
 
 Responsible for:
 
-* Collecting incident details
-* Gathering metrics
+* Retrieving incident context from MCP tools
+* Collecting metrics and logs
 * Searching historical incidents
-* Building investigation context
+* Building investigation evidence
 
-### Analysis Agent
+#### Analysis Agent
 
 Responsible for:
 
@@ -48,15 +51,16 @@ Responsible for:
 
 Powered by OpenRouter-compatible LLMs.
 
-### Response Agent
+#### Response Agent
 
 Responsible for:
 
 * Remediation recommendations
 * Jira ticket preparation
 * Human approval workflows
+* Context-aware action planning
 
-### Postmortem Agent
+#### Postmortem Agent
 
 Responsible for:
 
@@ -66,107 +70,216 @@ Responsible for:
 
 ---
 
-# Architecture
+## Architecture
 
 ```text
-                    +----------------------+
-                    |      FastAPI API     |
-                    +----------+-----------+
-                               |
-                               v
+                         +----------------------+
+                         |   React Dashboard    |
+                         +----------+-----------+
+                                    |
+                                    v
 
-                    +----------------------+
-                    |      LangGraph       |
-                    |     Orchestrator     |
-                    +----------+-----------+
-                               |
-          +--------------------+--------------------+
-          |                    |                    |
-          v                    v                    v
+                         +----------------------+
+                         |       FastAPI        |
+                         +----------+-----------+
+                                    |
+                                    v
 
-   Research Agent     Analysis Agent     Response Agent
-          |
-          +--------------------+
-                               |
-                               v
+                         +----------------------+
+                         |      LangGraph       |
+                         |     Orchestrator     |
+                         +----------+-----------+
+                                    |
+       +----------------------------+----------------------------+
+       |                            |                            |
+       v                            v                            v
 
-                     Postmortem Agent
-                               |
-                               v
+Research Agent            Analysis Agent              Response Agent
+       |                         |                            |
+       |                         |                            |
+       +-------------------------+----------------------------+
+                                    |
+                                    v
 
-                        Final Report
+                          Postmortem Agent
+                                    |
+                                    v
+
+                           Investigation DB
+                                    |
+                                    v
+
+                            Langfuse Tracing
+                                    |
+                                    v
+
+                         Enterprise MCP Server
+                                    |
+       +----------------------------+----------------------------+
+       |                            |                            |
+       v                            v                            v
+
+    Incidents                    Jira                       GitHub
 ```
 
 ---
 
-# Current Workflow
+## Workflow
 
 ```text
-Incident Request
-       |
-       v
+User Request
+      |
+      v
 
 Research Agent
-       |
-       v
+      |
+      v
 
 Analysis Agent
-       |
-       v
+      |
+      v
 
 Response Agent
-       |
-       v
+      |
+      v
 
 Human Approval
-       |
-       v
+      |
+      v
 
 Postmortem Agent
-       |
-       v
+      |
+      v
 
 Persist Investigation
-       |
-       v
+      |
+      v
 
-Return Report
+Return Investigation Report
 ```
 
 ---
 
-# Technology Stack
+## MCP Integration
 
-## Backend
+This platform integrates with a deployed Enterprise MCP Server.
+
+### MCP Endpoint
+
+```text
+https://enterprise-incident-mcp.onrender.com/mcp
+```
+
+### Available MCP Tools
+
+* create_incident
+* list_incidents
+* get_incident
+* update_incident
+* assign_incident
+* get_incident_timeline
+* search_incidents
+* find_similar_incidents
+* generate_postmortem
+* create_jira_ticket
+* create_github_issue
+* build_incident_context
+* generate_incident_rca
+* index_incident
+* semantic_search
+* investigate_incident
+
+The platform consumes these tools through a real FastMCP client implementation.
+
+---
+
+## Human-in-the-Loop Support
+
+The platform supports approval gates before taking remediation actions.
+
+Example:
+
+```text
+Should I create a Jira ticket?
+
+[Approve]
+[Reject]
+```
+
+This mirrors real enterprise operational workflows where AI recommendations require human validation before execution.
+
+---
+
+## Observability
+
+Langfuse is integrated for:
+
+* Workflow tracing
+* LLM observability
+* Token tracking
+* Latency monitoring
+* Debugging and evaluation
+
+Each investigation execution is captured as a trace.
+
+---
+
+## Frontend Dashboard
+
+The React dashboard supports:
+
+* Incident investigation
+* Investigation history
+* Investigation details
+* Human approval workflows
+* Jira approval actions
+
+---
+
+## Technology Stack
+
+### Frontend
+
+* React
+* TypeScript
+* Material UI
+* React Query
+* Axios
+
+### Backend
 
 * Python 3.12
 * FastAPI
 * LangGraph
 * LangChain Core
 
-## AI Models
+### AI
 
 * OpenRouter
-* OpenAI Compatible APIs
+* OpenAI-Compatible APIs
 
-## Database
+### Database
 
 * PostgreSQL
+* SQLite
 * SQLAlchemy
-* AsyncPG
 
-## Infrastructure
+### Infrastructure
 
 * Docker
 * Docker Compose
 
-## Testing
+### Observability
+
+* Langfuse
+
+### Testing
 
 * Pytest
 
 ---
 
-# Project Structure
+## Project Structure
 
 ```text
 incident-response-agent-platform/
@@ -198,6 +311,11 @@ incident-response-agent-platform/
 ├── tools/
 │   └── mcp_client.py
 │
+├── observability/
+│   └── langfuse.py
+│
+├── frontend/
+│
 ├── tests/
 │
 ├── Dockerfile
@@ -208,9 +326,9 @@ incident-response-agent-platform/
 
 ---
 
-# Setup
+## Setup
 
-## Prerequisites
+### Prerequisites
 
 * Python 3.12+
 * uv
@@ -218,7 +336,7 @@ incident-response-agent-platform/
 
 ---
 
-# Install Dependencies
+## Install Dependencies
 
 ```powershell
 uv sync
@@ -226,43 +344,59 @@ uv sync
 
 ---
 
-# Environment Variables
+## Environment Variables
 
-Create `.env`
+Create a `.env` file:
 
 ```env
 OPENROUTER_API_KEY=your_api_key_here
-
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-
-MODEL_NAME=openrouter/free
+MODEL_NAME=google/gemma-3n-e4b-it:free
 
 DATABASE_URL=sqlite+aiosqlite:///./incident_platform.db
+
+USE_REAL_MCP=true
+MCP_SERVER_URL=https://enterprise-incident-mcp.onrender.com/mcp
+
+LANGFUSE_PUBLIC_KEY=your_public_key
+LANGFUSE_SECRET_KEY=your_secret_key
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+LANGFUSE_TRACING_ENVIRONMENT=incident-response-dev
 ```
 
 ---
 
-# Run Locally
+## Run Backend
 
 ```powershell
-uv run uvicorn backend.main:app --reload
-```
-
-API:
-
-```text
-http://localhost:8000
+uv run uvicorn backend.main:app --port 8010 --reload
 ```
 
 Swagger UI:
 
 ```text
-http://localhost:8000/docs
+http://localhost:8010/docs
 ```
 
 ---
 
-# Run with Docker
+## Run Frontend
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## Run with Docker
 
 ```powershell
 docker compose up --build
@@ -270,23 +404,23 @@ docker compose up --build
 
 ---
 
-# API Examples
+## API Examples
 
-## Health Check
+### Health Check
 
 ```powershell
 Invoke-RestMethod `
-  -Uri http://localhost:8000/health `
+  -Uri http://localhost:8010/health `
   -Method GET
 ```
 
 ---
 
-## Investigate Incident
+### Investigate Incident
 
 ```powershell
 Invoke-RestMethod `
-  -Uri http://localhost:8000/incidents/INC-500/investigate `
+  -Uri http://localhost:8010/incidents/INC-500/investigate `
   -Method POST |
 ConvertTo-Json -Depth 10
 ```
@@ -306,42 +440,124 @@ Example Response:
 
 ---
 
-## Get Investigation
+### Get Investigation
 
 ```powershell
 Invoke-RestMethod `
-  -Uri http://localhost:8000/incidents/INC-500 `
+  -Uri http://localhost:8010/incidents/INC-500 `
   -Method GET |
 ConvertTo-Json -Depth 10
 ```
 
 ---
 
-## List Investigations
+### List Investigations
 
 ```powershell
 Invoke-RestMethod `
-  -Uri http://localhost:8000/incidents `
+  -Uri http://localhost:8010/incidents `
   -Method GET |
 ConvertTo-Json -Depth 10
 ```
 
 ---
 
-## Approve Jira Ticket
+### Approve Jira Ticket
 
 ```powershell
 Invoke-RestMethod `
-  -Uri http://localhost:8000/incidents/INC-500/approve-jira `
+  -Uri http://localhost:8010/incidents/INC-500/approve-jira `
   -Method POST |
 ConvertTo-Json -Depth 10
 ```
 
 ---
 
-# Testing
+## Example Investigation
 
-Run tests:
+### Input
+
+```text
+Investigate incident INC-500
+```
+
+### Research Agent Output
+
+```text
+DB connections at 98%
+Connection timeout errors observed
+Historical matches found
+```
+
+### Analysis Agent Output
+
+```json
+{
+  "root_cause": "Database connection pool exhaustion",
+  "confidence": 0.92
+}
+```
+
+### Response Agent Output
+
+```json
+{
+  "severity": "critical",
+  "actions": [
+    "Restart affected service pods",
+    "Increase database connection pool size",
+    "Add alert for DB connection usage above 85%"
+  ]
+}
+```
+
+### Postmortem Output
+
+```text
+Timeline
+Lessons Learned
+Incident Summary
+```
+
+---
+
+## Evaluation Strategy
+
+The platform can be evaluated using:
+
+* RCA quality
+* Confidence calibration
+* Resolution quality
+* Investigation latency
+* Tool success rate
+
+Metrics are observable through Langfuse traces.
+
+---
+
+## Security
+
+### Authentication
+
+* API Keys
+* Environment-based configuration
+
+### Authorization
+
+* Human approval workflow
+* MCP tool access controls
+
+### Auditability
+
+* Investigation persistence
+* Langfuse trace history
+* Jira approval tracking
+
+---
+
+## Testing
+
+Run all tests:
 
 ```powershell
 uv run pytest
@@ -355,123 +571,65 @@ uv run pytest backend/tests/test_incident_api.py
 
 ---
 
-# Current MCP Integration
+## Current Status
 
-The current implementation contains a mocked MCP layer.
+### Completed
 
-Supported operations:
-
-```python
-get_incident()
-
-search_incidents()
-
-create_jira_ticket()
-```
-
-Future versions will connect to a real MCP server.
-
----
-
-# Example Investigation
-
-Input:
-
-```text
-Investigate incident INC-500
-```
-
-Research Agent:
-
-```text
-DB connections 98%
-Connection timeout errors observed
-Historical matches found
-```
-
-Analysis Agent:
-
-```json
-{
-  "root_cause": "Database connection pool exhaustion",
-  "confidence": 0.93
-}
-```
-
-Response Agent:
-
-```json
-{
-  "severity": "critical",
-  "actions": [
-    "Restart pods",
-    "Increase DB connection pool"
-  ]
-}
-```
-
-Postmortem Agent:
-
-```text
-Timeline
-Lessons Learned
-Incident Summary
-```
-
----
-
-# Roadmap
-
-## Phase 2
-
-* Real MCP Server Integration
-* Langfuse Tracing
-* OpenTelemetry
-* Better Agent Memory
-
-## Phase 3
-
+* Multi-Agent Workflow
+* LangGraph Orchestration
+* OpenRouter Integration
 * React Dashboard
-* Investigation Timeline UI
-* Human Approval UI
+* Investigation Persistence
+* Human Approval Workflow
+* Real MCP Integration
+* Langfuse Observability
+* Docker Support
+* Automated Testing
 
-## Phase 4
+### Planned Enhancements
 
+* Agent-Level Langfuse Spans
 * Evaluation Harness
-* Golden Datasets
-* Regression Testing
-
-## Phase 5
-
+* OpenTelemetry Integration
+* Kubernetes Deployment
 * Autonomous Remediation
-* Event-Driven Workflows
-* Self-Healing Infrastructure
 
 ---
 
-# Learning Outcomes
+## Learning Outcomes
 
 This project demonstrates:
 
 * Multi-Agent Systems
+* Agent Orchestration
 * LangGraph Workflows
+* MCP Integration
 * Enterprise AI Architecture
 * Human-in-the-Loop Design
 * FastAPI Development
 * OpenRouter Integration
-* PostgreSQL Persistence
-* Docker Deployment
+* Langfuse Observability
+* Production Deployment Patterns
 
 ---
 
-# Portfolio Value
+## Portfolio Value
 
 This project showcases:
 
 * Agent Engineering
 * Enterprise AI Integration
+* MCP Expertise
 * LangGraph Expertise
 * Operational Automation
 * Production Backend Design
+* AI Observability
 
-and serves as a strong portfolio project for Forward Deployed Engineer, AI Engineer, Platform Engineer, and Applied AI roles.
+and serves as a flagship portfolio project for:
+
+* Forward Deployed Engineer (FDE)
+* AI Engineer
+* Platform Engineer
+* Applied AI Engineer
+* AI Solutions Architect
+* Enterprise AI Consultant
