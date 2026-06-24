@@ -26,7 +26,17 @@ async def list_investigations():
 
     return {
         "count": len(records),
-        "incident_ids": [record.incident_id for record in records],
+        "investigations": [
+            {
+                "incident_id": record.incident_id,
+                "resolved": record.resolved,
+                "root_cause": record.rca_report.get("root_cause"),
+                "confidence": record.rca_report.get("confidence"),
+                "created_at": record.created_at,
+                "updated_at": record.updated_at,
+            }
+            for record in records
+        ],
     }
 
 

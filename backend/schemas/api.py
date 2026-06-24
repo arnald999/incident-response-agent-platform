@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 from backend.schemas.analysis import RCAReport
 from backend.schemas.postmortem import Postmortem
@@ -10,9 +11,18 @@ class InvestigationRequest(BaseModel):
     alert_details: dict | None = None
 
 
+class InvestigationSummary(BaseModel):
+    incident_id: str
+    resolved: bool
+    root_cause: str | None = None
+    confidence: float | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class InvestigationListResponse(BaseModel):
     count: int
-    incident_ids: list[str]
+    investigations: list[InvestigationSummary]
 
 
 class InvestigationResponse(BaseModel):
